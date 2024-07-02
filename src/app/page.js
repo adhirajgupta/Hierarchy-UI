@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, List } from 'antd';
-import Name from "./name";
+import Name from "./components/name";
 
 const initialHierarchyData = {
     title: 'CEO',

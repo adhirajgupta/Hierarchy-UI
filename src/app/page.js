@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Modal, List } from 'antd';
-import Name from "./components/name";
+import { Button, Modal, Input, List } from 'antd';
+import Name from "./name";
 
 const initialHierarchyData = {
     title: 'CEO',
@@ -107,19 +107,32 @@ const initialHierarchyData = {
         }
     ]
 };
-
 const MyHierarchyComponent = () => {
-    const [hierarchyData, setHierarchyData] = useState(() => {
-        const savedData = localStorage.getItem('hierarchyData');
-        return savedData ? JSON.parse(savedData) : initialHierarchyData;
-    });
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [hierarchyData, setHierarchyData] = useState(initialHierarchyData);
+    const [isClient, setIsClient] = useState(false);
+
+    const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
 
     useEffect(() => {
-        localStorage.setItem('hierarchyData', JSON.stringify(hierarchyData));
-    }, [hierarchyData]);
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        if (isClient) {
+            const savedData = localStorage.getItem('hierarchyData');
+            if (savedData) {
+                setHierarchyData(JSON.parse(savedData));
+            }
+        }
+    }, [isClient]);
+
+    useEffect(() => {
+        if (isClient) {
+            localStorage.setItem('hierarchyData', JSON.stringify(hierarchyData));
+        }
+    }, [hierarchyData, isClient]);
 
     const handleDetailsUpdate = (updatedDetails) => {
         const updatedHierarchyData = updateDetailsInHierarchy(hierarchyData, updatedDetails);
@@ -157,46 +170,36 @@ const MyHierarchyComponent = () => {
     };
 
     const handleSearch = () => {
-        setIsModalVisible(true);
+        const results = searchEmployees(hierarchyData, searchQuery);
+        setSearchResults(results);
+        setSearchModalVisible(true);
     };
 
-    const handleSearchChange = (e) => {
-        const { value } = e.target;
-        setSearchQuery(value);
-        if (value.trim()) {
-            const results = searchInHierarchy(hierarchyData, value.trim().toLowerCase());
-            setSearchResults(results);
-        } else {
-            setSearchResults([]);
-        }
-    };
-
-    const searchInHierarchy = (node, query) => {
-		console.log(node.name)
+    const searchEmployees = (node, query) => {
         let results = [];
-        if (
-            node.name?.toLowerCase().includes(query) ||
-            node.email?.toLowerCase().includes(query) ||
-            node.phone?.toLowerCase().includes(query)
-        ) {
+        if (node.name && node.name.toLowerCase().includes(query.toLowerCase())) {
+            results.push(node);
+        }
+        if (node.email && node.email.toLowerCase().includes(query.toLowerCase())) {
+            results.push(node);
+        }
+        if (node.phone && node.phone.toLowerCase().includes(query.toLowerCase())) {
             results.push(node);
         }
         if (node.children) {
             node.children.forEach(child => {
-                results = results.concat(searchInHierarchy(child, query));
+                results = results.concat(searchEmployees(child, query));
             });
         }
         return results;
     };
 
-    const handleOk = () => {
-        setIsModalVisible(false);
-        setSearchQuery('');
-        setSearchResults([]);
+    const handleSearchInputChange = (e) => {
+        setSearchQuery(e.target.value);
     };
 
-    const handleCancel = () => {
-        setIsModalVisible(false);
+    const handleSearchModalCancel = () => {
+        setSearchModalVisible(false);
         setSearchQuery('');
         setSearchResults([]);
     };
@@ -204,30 +207,31 @@ const MyHierarchyComponent = () => {
     return (
         <div>
             <h1>Company Hierarchy</h1>
-            <Button type="primary" onClick={handleSearch}>Search</Button>
+            <div style={{ marginBottom: 20 }}>
+                <Input placeholder="Search by name, phone, or email" value={searchQuery} onChange={handleSearchInputChange} />
+                <Button type="primary" style={{ marginLeft: 10 }} onClick={handleSearch}>Search</Button>
+            </div>
             <ul>
                 {renderHierarchy(hierarchyData)}
             </ul>
-
             <Modal
-                title="Search Employee"
-                visible={isModalVisible}
-                onOk={handleOk}
-                onCancel={handleCancel}
+                title="Search Results"
+                visible={searchModalVisible}
+                onCancel={handleSearchModalCancel}
+                footer={[
+                    <Button key="back" onClick={handleSearchModalCancel}>
+                        Close
+                    </Button>
+                ]}
             >
-                <Input
-                    placeholder="Search by name, email or phone"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                />
                 <List
                     itemLayout="horizontal"
                     dataSource={searchResults}
                     renderItem={item => (
                         <List.Item>
                             <List.Item.Meta
-                                title={item.name}
-                                description={`${item.email} - ${item.phone}`}
+                                title={item.name || item.teamName}
+                                description={item.email ? `Email: ${item.email}` : `Phone: ${item.phone}`}
                             />
                         </List.Item>
                     )}

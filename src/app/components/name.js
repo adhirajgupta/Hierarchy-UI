@@ -322,7 +322,7 @@ const Name = ({ text, details, onDetailsUpdate }) => {
                 )
             }
             {
-                details.title.endsWith("er") && (
+                details.title.endsWith("member") && (
 
                     <Button type="link" onClick={handleShiftTeam}>Shift Team</Button>
                 )

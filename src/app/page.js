@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, List } from 'antd';
 import Name from "./components/name";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { byPrefixAndName } from '@awesome.me/kit-1effb0779a/icons'
 
 const initialHierarchyData = {
     title: 'CEO',
@@ -210,6 +212,7 @@ const MyHierarchyComponent = () => {
             <div style={{ marginBottom: 20 }}>
                 <Input placeholder="Search by name, phone, or email" value={searchQuery} onChange={handleSearchInputChange} />
                 <Button type="primary" style={{ marginLeft: 10 }} onClick={handleSearch}>Search</Button>
+ <FontAwesomeIcon icon={byPrefixAndName.fas['house']} size='sm' />
             </div>
             <ul>
                 {renderHierarchy(hierarchyData)}
